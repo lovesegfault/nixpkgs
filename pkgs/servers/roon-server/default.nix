@@ -11,11 +11,11 @@
 , zlib
 }: stdenv.mkDerivation rec {
   name = "roon-server";
-  version = "100700571";
+  version = "100700610";
 
   src = fetchurl {
     url = "http://download.roonlabs.com/updates/stable/RoonServer_linuxx64_${version}.tar.bz2";
-    sha256 = "191vlzf10ypkk1prp6x2rszlmsihdwpd3wvgf2jg6ckwyxy2hc6k";
+    sha256 = "0000000000000000000000000000000000000000000000000000";
   };
 
   buildInputs = [
