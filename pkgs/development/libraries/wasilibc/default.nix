@@ -1,14 +1,23 @@
-{ stdenv, fetchFromGitHub, lib }:
+{ stdenv, buildPackages, fetchFromGitHub, lib }:
 
 stdenv.mkDerivation {
   pname = "wasilibc";
-  version = "20190712";
-  src = fetchFromGitHub {
-    owner = "CraneStation";
+  version = "unstable-2021-09-23";
+
+  src = buildPackages.fetchFromGitHub {
+    owner = "WebAssembly";
     repo = "wasi-libc";
-    rev = "8df0d4cd6a559b58d4a34b738a5a766b567448cf";
-    sha256 = "1n4gvgzacpagar2mx8g9950q0brnhwz7jg2q44sa5mnjmlnkiqhh";
+    rev = "ad5133410f66b93a2381db5b542aad5e0964db96";
+    hash = "sha256:146jamq2q24vxjfpcwlqj84wzc80cbpbg0ns2wimyvzbanah48j6";
+    fetchSubmodules = true;
   };
+
+  # clang-13: error: argument unused during compilation: '-rtlib=compiler-rt' [-Werror,-Wunused-command-line-argument]
+  postPatch = ''
+    substituteInPlace Makefile \
+      --replace "-Werror" ""
+  '';
+
   makeFlags = [
     "WASM_CC=${stdenv.cc.targetPrefix}cc"
     "WASM_NM=${stdenv.cc.targetPrefix}nm"
@@ -23,9 +32,9 @@ stdenv.mkDerivation {
 
   meta = with lib; {
     description = "WASI libc implementation for WebAssembly";
-    homepage    = "https://wasi.dev";
-    platforms   = platforms.wasi;
-    maintainers = [ maintainers.matthewbauer ];
+    homepage = "https://wasi.dev";
+    platforms = platforms.wasi;
+    maintainers = with maintainers; [ matthewbauer ];
     license = with licenses; [ asl20 mit llvm-exception ];
   };
 }

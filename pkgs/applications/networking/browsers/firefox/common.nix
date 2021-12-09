@@ -14,6 +14,8 @@
 , rust-cbindgen, nodejs, nasm, fetchpatch
 , gnum4
 , gtk3, wrapGAppsHook
+, pkgsCross
+, symlinkJoin
 , debugBuild ? false
 
 ### optionals
@@ -121,6 +123,15 @@ let
                 })
                 else stdenv;
 
+  wasiSysRoot = symlinkJoin {
+    name = "wasi-sysroot";
+    paths = [
+      pkgsCross.wasi32.stdenv.cc.libc
+      pkgsCross.wasi32.stdenv.cc.bintools
+      pkgsCross.wasi32.llvmPackages.libcxx
+      pkgsCross.wasi32.llvmPackages.libcxxabi
+    ];
+  };
 in
 
 buildStdenv.mkDerivation ({
@@ -209,6 +220,10 @@ buildStdenv.mkDerivation ({
     export MOZCONFIG=$(pwd)/mozconfig
     export MOZBUILD_STATE_PATH=$(pwd)/mozbuild
 
+    # WASM magic
+    export WASM_CC=${pkgsCross.wasi32.stdenv.cc}/bin/${pkgsCross.wasi32.stdenv.cc.targetPrefix}clang
+    export WASM_CXX=${pkgsCross.wasi32.stdenv.cc}/bin/${pkgsCross.wasi32.stdenv.cc.targetPrefix}clang++
+
     # Set C flags for Rust's bindgen program. Unlike ordinary C
     # compilation, bindgen does not invoke $CC directly. Instead it
     # uses LLVM's libclang. To make sure all necessary flags are
@@ -274,6 +289,8 @@ buildStdenv.mkDerivation ({
   ++ lib.optional (ltoSupport && (buildStdenv.isAarch32 || buildStdenv.isi686 || buildStdenv.isx86_64)) "--disable-elf-hack"
   ++ lib.optional (ltoSupport && !buildStdenv.isDarwin) "--enable-linker=lld"
 
+  ++ lib.optional (lib.versionAtLeast version "95") "--with-wasi-sysroot=${wasiSysRoot}"
+
   ++ flag alsaSupport "alsa"
   ++ flag pulseaudioSupport "pulseaudio"
   ++ flag ffmpegSupport "ffmpeg"
@@ -292,7 +309,7 @@ buildStdenv.mkDerivation ({
   ++ lib.optionals enableDebugSymbols [ "--disable-strip" "--disable-install-strip" ]
 
   ++ lib.optional enableOfficialBranding "--enable-official-branding"
-  ++ lib.optional (lib.versionAtLeast version "95") "--without-wasm-sandboxed-libraries"
+  #++ lib.optional (lib.versionAtLeast version "95") "--without-wasm-sandboxed-libraries"
   ++ extraConfigureFlags;
 
   postConfigure = ''
