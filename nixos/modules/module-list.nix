@@ -1188,6 +1188,7 @@
   ./services/web-apps/komga.nix
   ./services/web-apps/lemmy.nix
   ./services/web-apps/limesurvey.nix
+  ./services/web-apps/mainsail.nix
   ./services/web-apps/mastodon.nix
   ./services/web-apps/matomo.nix
   ./services/web-apps/mattermost.nix
